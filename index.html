@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Joutes Sportives · PAM</title>
+<meta name="description" content="Palmarès, historique et saisie en direct des joutes sportives de la PAM, since 2012.">
+<meta name="theme-color" content="#161616">
+<link rel="icon" href="pam.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Charte PAM : photo noir et blanc, seul le jaune des t-shirts ressort. Gris neutres, noir pour les bandeaux, jaune PAM en accent. */
+:root {
+  --bg: #F1F1EF;
+  --surface: #FFFFFF;
+  --surface-2: #E7E7E4;
+  --ink: #161616;
+  --muted: #5F5F5C;
+  --line: #D6D6D2;
+  --accent: #F5C400;
+  --accent-ink: #161616;
+  --accent-text: #8A6D00;
+  --gold: #F5C400;
+  --gold-soft: #FFF3C2;
+  --good: #2F7D4F;
+  --warn: #8A5A00;
+  --loss: #B42318;
+  --loss-soft: #FBE1DD;
+  --board: #161616;
+  --board-ink: #F1F1EF;
+  --chip-ink: #1B1F2A;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111111; --surface: #1B1B1B; --surface-2: #262626; --ink: #EDEDEA; --muted: #A3A39F;
+    --line: #333331; --accent: #FFD21F; --accent-ink: #111111; --accent-text: #FFD21F; --gold: #FFD21F; --gold-soft: #3A3210;
+    --good: #5BC28A; --warn: #F0B44B; --board: #000000; --board-ink: #EDEDEA; --loss: #FF7B6E; --loss-soft: #3E1E1B; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111111; --surface: #1B1B1B; --surface-2: #262626; --ink: #EDEDEA; --muted: #A3A39F;
+  --line: #333331; --accent: #FFD21F; --accent-ink: #111111; --accent-text: #FFD21F; --gold: #FFD21F; --gold-soft: #3A3210;
+  --good: #5BC28A; --warn: #F0B44B; --board: #000000; --board-ink: #EDEDEA; --loss: #FF7B6E; --loss-soft: #3E1E1B; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+.authbox { display: flex; gap: 8px; align-items: center; margin-left: auto; font-size: .85rem; }
+.authbox .who { opacity: .8; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.authbox button { background: transparent; color: var(--board-ink); border: 1px solid currentColor; border-radius: 6px; padding: 4px 10px; cursor: pointer; font: inherit; font-weight: 600; opacity: .85; }
+.authbox button.go { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); opacity: 1; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h2 { font-size: 1.9rem; font-weight: 800; font-style: italic; text-transform: uppercase; }
+h2::before { content: ""; display: inline-block; width: 10px; height: .8em; background: var(--accent); margin-right: 10px; transform: skewX(-12deg); vertical-align: -.02em; }
+h3 { font-size: 1.3rem; font-weight: 700; }
+.num { font-variant-numeric: tabular-nums; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--accent); }
+
+/* En-tête */
+.board { background: var(--board); color: var(--board-ink); margin-top: calc(-1 * env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); border-bottom: 6px solid var(--accent); }
+.board .wrap { padding-block: 18px 0; }
+.brand { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.brand .pam { font-family: var(--font-display); font-style: italic; font-weight: 800; font-size: clamp(2.6rem, 8vw, 3.8rem); line-height: .9; letter-spacing: .02em; background: var(--accent); color: var(--accent-ink); padding: 4px 16px 6px 12px; border-radius: 4px; transform: skewX(-6deg); }
+.brand h1 { font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 800; text-transform: uppercase; line-height: 1; }
+.brand .since { font-family: var(--font-display); font-size: 1rem; letter-spacing: .12em; text-transform: uppercase; opacity: .7; display: block; margin-top: 4px; }
+nav.tabs { display: flex; gap: 4px; margin-top: 14px; overflow-x: auto; scrollbar-width: none; }
+nav.tabs a { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; letter-spacing: .06em; text-transform: uppercase; color: var(--board-ink); opacity: .72; text-decoration: none; padding: 10px 14px 12px; border-bottom: 4px solid transparent; white-space: nowrap; }
+nav.tabs a:hover { opacity: 1; }
+nav.tabs a[aria-current="page"] { opacity: 1; border-bottom-color: var(--accent); }
+.status { font-size: .85rem; color: var(--muted); padding-block: 8px 0; min-height: 1.6em; }
+.status.warn { color: var(--warn); }
+
+main { padding-block: 18px 60px; display: grid; gap: 22px; }
+section.view { display: grid; gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; min-width: 0; }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.grid2 { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.label { font-family: var(--font-display); font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+/* Puces joueurs */
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px 2px 8px; border-radius: 999px; background: var(--c, #ccc); color: var(--chip-ink); font-weight: 600; font-size: .9rem; white-space: nowrap; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--s, #888); flex: none; }
+
+/* Photo d'équipe */
+.team-photo { position: relative; margin: 0; border-radius: var(--radius); overflow: hidden; background: var(--board); }
+.team-photo img { display: block; width: 100%; max-width: 100%; height: clamp(200px, 38vw, 340px); object-fit: cover; object-position: center 58%; }
+.team-photo figcaption { position: absolute; left: 0; bottom: 14px; background: var(--accent); color: var(--accent-ink); font-family: var(--font-display); font-style: italic; font-weight: 800; font-size: clamp(1.1rem, 3vw, 1.5rem); text-transform: uppercase; letter-spacing: .04em; padding: 4px 16px 4px 14px; }
+
+/* Champion */
+.hero { display: grid; gap: 16px; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: stretch; }
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+.champ { background: var(--board); color: var(--board-ink); border-radius: var(--radius); padding: 22px; display: grid; gap: 6px; align-content: start; position: relative; overflow: hidden; }
+.champ .yr { font-family: var(--font-display); font-size: 1rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.champ .who { font-family: var(--font-display); font-size: clamp(2.6rem, 9vw, 4.2rem); font-weight: 800; font-style: italic; line-height: .95; text-transform: uppercase; }
+.champ .pts { font-family: var(--font-display); font-size: 1.3rem; opacity: .85; }
+.champ .podium { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: .95rem; opacity: .9; }
+.champ .podium b { font-family: var(--font-display); color: var(--gold); margin-right: 4px; }
+
+/* Mur des champions */
+.wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.tile { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface); text-decoration: none; color: inherit; display: grid; gap: 2px; min-height: 74px; }
+a.tile:hover { border-color: var(--ink); box-shadow: inset 0 -4px 0 var(--accent); }
+.tile .y { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--muted); letter-spacing: .05em; }
+.tile .n { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; line-height: 1.1; }
+.tile.gap { background: transparent; border-style: dashed; }
+.tile.gap .n { color: var(--muted); font-weight: 500; font-size: 1rem; }
+
+/* Tableaux */
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-family: var(--font-display); font-weight: 600; letter-spacing: .05em; text-transform: uppercase; font-size: .85rem; color: var(--muted); }
+th.ev { white-space: normal; min-width: 76px; max-width: 110px; line-height: 1.15; vertical-align: bottom; }
+td.left, th.left { text-align: left; }
+td.total { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; }
+td.rank { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; width: 44px; }
+tr.first td.rank { color: var(--gold); }
+.cell-pts { font-weight: 600; }
+.cell-place { display: block; font-size: .75rem; color: var(--muted); }
+.jk { display: inline-block; font-family: var(--font-display); font-size: .7rem; font-weight: 700; letter-spacing: .05em; background: var(--accent); color: var(--accent-ink); border-radius: 4px; padding: 0 4px; margin-left: 3px; vertical-align: 1px; }
+td.win { box-shadow: inset 0 -3px 0 var(--gold); }
+td.loss { background: var(--loss-soft); }
+td.loss .cell-pts, td.loss .cell-place { color: var(--loss); }
+tr.last td.rank, tr.last td.total { color: var(--loss); }
+tr.last td { background: var(--loss-soft); }
+.champ .yr.red { color: var(--loss); }
+.champ.red { border-left: 8px solid var(--loss); }
+.tile .lose { color: var(--loss); }
+.team-tag { display: inline-block; font-size: .7rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--muted); }
+
+/* Boutons et champs */
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.small { padding: 4px 10px; font-size: .85rem; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+input[type=text], input[type=number], input[type=date], select, textarea { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 0; }
+input[type=number] { width: 84px; }
+.field { display: grid; gap: 4px; }
+.field > span { font-size: .8rem; color: var(--muted); font-weight: 600; }
+
+/* Sélecteur d'édition */
+.yearbar { display: flex; gap: 6px; flex-wrap: wrap; }
+.yearbar a { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; text-decoration: none; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 4px 12px; background: var(--surface); }
+.yearbar a.empty { color: var(--muted); border-style: dashed; background: transparent; }
+.yearbar a[aria-current="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* Joueurs */
+.players { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+table.small th, table.small td { padding: 5px 8px; }
+.pcard { border-top: 6px solid var(--s); }
+.pcard h3 { font-size: 1.8rem; text-transform: uppercase; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-block: 12px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
+.stat b { display: block; font-family: var(--font-display); font-size: 1.6rem; line-height: 1.1; }
+.stat span { font-size: .75rem; color: var(--muted); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: .9rem; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+
+/* Graphique */
+.chart-wrap { overflow-x: auto; }
+.chart-wrap svg { display: block; min-width: 560px; width: 100%; height: auto; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .85rem; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+
+/* Jour J */
+.evcard { display: grid; gap: 12px; }
+.evhead { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.entry { display: grid; grid-template-columns: minmax(90px, 1.2fr) 84px 92px auto 52px; gap: 8px; align-items: center; }
+.entry .pts { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; text-align: right; }
+.entry.head { font-size: .75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+@media (max-width: 520px) { .entry { grid-template-columns: minmax(70px, 1fr) 66px 78px auto 40px; gap: 6px; } input[type=number] { width: 66px; } .entry select { width: 78px; } }
+.pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.pair { display: flex; justify-content: space-between; align-items: center; gap: 6px; background: var(--surface-2); border-radius: 8px; padding: 6px 8px; font-size: .85rem; }
+.pair input { width: 58px; }
+details.setup > summary { cursor: pointer; font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
+.evlist { display: grid; gap: 8px; }
+.evrow { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr) auto auto; gap: 8px; align-items: center; }
+@media (max-width: 560px) { .evrow { grid-template-columns: 1fr 1fr; } }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; }
+.notice { border-left: 4px solid var(--warn); background: var(--surface-2); padding: 10px 14px; border-radius: 6px; font-size: .9rem; }
+.empty-state { text-align: center; padding: 30px 16px; color: var(--muted); }
+.livebar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--board); color: var(--board-ink); border-radius: var(--radius); padding: 10px 14px; display: flex; gap: 8px 16px; flex-wrap: wrap; align-items: center; }
+.livebar .label { color: var(--board-ink); opacity: .7; }
+.livebar .it { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; }
+.livebar .it b { color: var(--gold); margin-right: 4px; }
+.rules table td, .rules table th { text-align: left; }
+.rules ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+@media (prefers-reduced-motion: no-preference) { .btn, .tile, nav.tabs a { transition: border-color .15s, opacity .15s, background .15s; } }
+</style>
+</head>
+<body>
+<header class="board">
+  <div class="wrap">
+    <div class="brand"><span class="pam" aria-hidden="true">PAM</span><div><h1>Joutes sportives</h1><span class="since">Since 2012</span></div><div class="authbox" id="authbox"></div></div>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#palmares" data-view="palmares">Palmarès</a>
+      <a href="#editions" data-view="editions">Éditions</a>
+      <a href="#epreuves" data-view="epreuves">Épreuves</a>
+      <a href="#joueurs" data-view="joueurs">Joueurs</a>
+      <a href="#jour-j" data-view="jour-j">Jour J</a>
+      <a href="#reglement" data-view="reglement">Règlement</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap"><div class="status" id="status" role="status">Chargement des résultats…</div></div>
+<main class="wrap" id="app"></main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+(() => {
+"use strict";
+// ---------- Barème ----------
+const BASE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+const ABANDON = -1;
+function basePts(place, k) { let s = 0; for (let i = 0; i < k; i++) s += BASE[place - 1 + i] || 0; return Math.floor(s / k); }
+function placeNum(v) { if (v == null || v === "") return null; if (typeof v === "number") return v; const m = String(v).match(/^\s*(\d+)/); return m ? +m[1] : null; }
+function isAB(v) { return typeof v === "string" && /^\s*(ab|abandon)/i.test(v); }
+function tieLabel(n, k) { return k > 2 ? n + " ex²" : k === 2 ? n + " ex" : String(n); }
+
+// ---------- État ----------
+const S = { players: {}, editions: {}, loaded: { p: false, e: false }, canWrite: null, readOnly: false, db: null, view: "palmares", sel: null, jourSel: null, openSetup: false };
+const $app = document.getElementById("app");
+const $status = document.getElementById("status");
+
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pName = id => (S.players[id] && S.players[id].name) || id;
+function chip(id, extra) {
+  const p = S.players[id] || {};
+  return `<span class="chip" style="--c:${esc(p.chip || "#ccc")}"><span class="dot" style="--s:${esc(p.stroke || "#888")}"></span>${esc(pName(id))}${extra || ""}</span>`;
+}
+const stroke = id => (S.players[id] && S.players[id].stroke) || "#888";
+
+// ---------- Calculs ----------
+function eventRows(ed, ev) {
+  const res = (ed.results || {})[ev.id] || {};
+  const jok = ed.jokers || {};
+  const counts = {};
+  for (const pid of ed.players || []) { const r = res[pid]; if (r && !isAB(r.place)) { const n = placeNum(r.place); if (n) counts[n] = (counts[n] || 0) + 1; } }
+  const out = {};
+  for (const pid of ed.players || []) {
+    const r = res[pid] || {};
+    const j = jok[pid] === ev.id;
+    const ab = isAB(r.place);
+    const n = ab ? null : placeNum(r.place);
+    let pts = null;
+    if (typeof r.pts === "number") pts = r.pts;
+    else if (ab) pts = ABANDON;
+    else if (n) pts = basePts(n, counts[n]) * (j ? 2 : 1);
+    let label = "";
+    if (ab) label = "AB";
+    else if (typeof r.place === "string" && r.place.trim()) label = r.place.trim();
+    else if (n) label = tieLabel(n, counts[n]);
+    out[pid] = { pts, place: n, label, joker: j, ab, score: r.score };
+  }
+  // place déduite des points quand elle n'a pas été notée (anciens tableaux)
+  const missing = Object.keys(out).filter(pid => out[pid].place == null && !out[pid].ab && out[pid].pts != null);
+  if (missing.length) {
+    const raw = pid => out[pid].pts / (out[pid].joker ? 2 : 1);
+    const all = Object.keys(out).filter(pid => out[pid].pts != null && !out[pid].ab);
+    for (const pid of missing) out[pid].place = 1 + all.filter(o => raw(o) > raw(pid)).length;
+  }
+  // défaite = dernière place de l'épreuve (ou abandon)
+  const placed = Object.values(out).filter(x => x.pts != null && x.place);
+  const worst = placed.length ? Math.max(...placed.map(x => x.place)) : null;
+  for (const pid in out) { const x = out[pid]; if (x.pts == null) continue; x.last = x.ab || (worst != null && x.place === worst && placed.length > 1); }
+  return out;
+}
+function standings(ed) {
+  const tot = {}; let any = false;
+  for (const pid of ed.players || []) tot[pid] = 0;
+  for (const ev of ed.events || []) {
+    const rows = eventRows(ed, ev);
+    for (const pid in rows) if (rows[pid].pts != null) { tot[pid] += rows[pid].pts; any = true; }
+  }
+  const list = Object.keys(tot).map(pid => ({ pid, total: tot[pid] })).sort((a, b) => b.total - a.total || (S.players[a.pid]?.order || 99) - (S.players[b.pid]?.order || 99));
+  list.forEach(r => { r.rank = 1 + list.filter(o => o.total > r.total).length; });
+  const maxRank = list.length ? Math.max(...list.map(r => r.rank)) : 0;
+  list.forEach(r => { r.last = list.length > 1 && r.rank === maxRank; });
+  return { list, any, worstFirst: list.slice().reverse() };
+}
+const hasResults = ed => standings(ed).any;
+const yearsSorted = () => Object.values(S.editions).sort((a, b) => a.year - b.year);
+function finished() { return yearsSorted().filter(ed => ed.status === "terminee" && hasResults(ed)); }
+
+function normEvent(name) {
+  let s = String(name || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/par equipe/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const alias = { "molky": "molkky", "palet": "palets", "boite a palets": "palets", "crocket": "croquet", "corn hol": "corn hole", "ping pong": "ping pong", "time bomb": "time bomb", "times bomb": "time bomb", "tir a la galinette cendree": "tir a l arc", "game of kart": "karting" };
+  return alias[s] || s;
+}
+const EVENT_DISPLAY = { "tir a l arc": "Tir à l'arc", "karting": "Karting", "molkky": "Mölkky", "palets": "Palets", "ping pong": "Ping-pong", "croquet": "Croquet", "corn hole": "Corn Hole" };
+const eventDisplay = (key, fallback) => EVENT_DISPLAY[key] || fallback;
+
+function careerStats() {
+  const st = {};
+  const ensure = pid => st[pid] || (st[pid] = { pid, titles: [], lasts: [], podiums: 0, eds: 0, rankSum: 0, eventWins: 0, eventLosses: 0, events: 0, byEvent: {}, jokerPts: [], best: null, worst: null, totals: [] });
+  for (const ed of finished()) {
+    const { list } = standings(ed);
+    for (const r of list) {
+      const s = ensure(r.pid);
+      s.eds++; s.rankSum += r.rank; s.totals.push({ year: ed.year, total: r.total, rank: r.rank, last: r.last });
+      if (r.rank === 1) s.titles.push(ed.year);
+      if (r.last) s.lasts.push(ed.year);
+      if (r.rank <= 3) s.podiums++;
+      if (!s.best || r.total > s.best.total) s.best = { total: r.total, year: ed.year };
+      if (!s.worst || r.total < s.worst.total) s.worst = { total: r.total, year: ed.year };
+    }
+    for (const ev of ed.events || []) {
+      const rows = eventRows(ed, ev);
+      const key = normEvent(ev.name);
+      for (const pid in rows) {
+        const x = rows[pid]; if (x.pts == null) continue;
+        const s = ensure(pid); s.events++;
+        const b = s.byEvent[key] || (s.byEvent[key] = { key, name: eventDisplay(key, ev.name), n: 0, wins: 0, losses: 0, placeSum: 0, placed: 0, base: 0, years: [] });
+        b.n++; if (x.place) { b.placeSum += x.place; b.placed++; }
+        b.base += x.joker ? x.pts / 2 : x.pts; b.years.push(ed.year);
+        if (x.place === 1) { s.eventWins++; b.wins++; }
+        if (x.last) { s.eventLosses++; b.losses++; }
+        if (x.joker) s.jokerPts.push({ pts: x.pts, year: ed.year, ev: ev.name });
+      }
+    }
+  }
+  return st;
+}
+
+function eventPalmares() {
+  const map = {};
+  for (const ed of finished()) {
+    for (const ev of ed.events || []) {
+      const rows = eventRows(ed, ev);
+      const pids = Object.keys(rows).filter(pid => rows[pid].pts != null);
+      if (!pids.length) continue;
+      const key = normEvent(ev.name);
+      const e = map[key] || (map[key] = { key, name: ev.name, team: false, years: [], byPlayer: {} });
+      e.name = eventDisplay(key, ev.name); e.team = e.team || !!ev.team;
+      e.years.push({ year: ed.year, losers: pids.filter(p => rows[p].last), winners: pids.filter(p => rows[p].place === 1) });
+      for (const pid of pids) {
+        const b = e.byPlayer[pid] || (e.byPlayer[pid] = { pid, n: 0, w: 0, l: 0, placeSum: 0, placed: 0 });
+        b.n++; if (rows[pid].place === 1) b.w++; if (rows[pid].last) b.l++;
+        if (rows[pid].place) { b.placeSum += rows[pid].place; b.placed++; }
+      }
+    }
+  }
+  return Object.values(map).sort((a, b) => b.years.length - a.years.length || a.name.localeCompare(b.name, "fr"));
+}
+
+// ---------- Rendu ----------
+function setStatus(msg, warn) { $status.textContent = msg || ""; $status.classList.toggle("warn", !!warn); }
+
+function render() {
+  document.querySelectorAll("nav.tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.view === S.view || (S.view === "edition" && a.dataset.view === "editions") ? "page" : "false"));
+  const focus = captureFocus();
+  if (!S.loaded.e) { $app.innerHTML = `<div class="card empty-state">Chargement des résultats…</div>`; return; }
+  if (!Object.keys(S.editions).length) { $app.innerHTML = `<div class="card empty-state"><h3>Aucune édition enregistrée</h3><p>L'historique n'a pas encore été importé. Créez la première édition depuis l'onglet <a href="#jour-j">Jour J</a>.</p></div>`; return; }
+  const v = { palmares: viewPalmares, editions: viewEditions, edition: viewEditions, epreuves: viewEpreuves, joueurs: viewJoueurs, "jour-j": viewJourJ, reglement: viewRules }[S.view] || viewPalmares;
+  $app.innerHTML = v();
+  restoreFocus(focus);
+}
+function captureFocus() { const a = document.activeElement; if (a && a.id && $app.contains(a)) return { id: a.id, value: a.value, s: a.selectionStart, e: a.selectionEnd, dirty: a.dataset.dirty === "1" }; return null; }
+function restoreFocus(f) {
+  if (!f) return; const el = document.getElementById(f.id); if (!el) return;
+  if (f.dirty && "value" in el) { el.value = f.value; el.dataset.dirty = "1"; }
+  el.focus();
+  try { if (f.s != null) el.setSelectionRange(f.s, f.e); } catch (_) {}
+}
+
+function viewPalmares() {
+  const fin = finished();
+  const last = fin[fin.length - 1];
+  let hero = "";
+  if (last) {
+    const { list } = standings(last);
+    const losers = list.filter(r => r.last);
+    const champs = list.filter(r => r.rank === 1);
+    const near = list.filter(r => !r.last).slice(-2).reverse();
+    hero = `<div class="hero">
+      <div class="champ red">
+        <div class="yr red">Lanterne rouge ${last.year}</div>
+        <div class="who">${losers.map(c => esc(pName(c.pid))).join(" &amp; ")}</div>
+        <div class="pts num">${losers[0].total} points · ${losers[0].rank}<sup>e</sup> sur ${list.length}</div>
+        <div class="podium">${near.map(r => `<span><b>${r.rank}<sup>e</sup></b>${esc(pName(r.pid))} · ${r.total}</span>`).join("")}<span><b>1<sup>er</sup></b>${champs.map(c => esc(pName(c.pid))).join(" & ")} · ${champs[0].total}</span></div>
+      </div>
+      <div class="card"><div class="label">Dernières places depuis 2012</div>${countBars("lasts", "pas encore")}</div>
+    </div>`;
+  }
+  const photo = `<figure class="team-photo"><img src="pam.jpg" alt="Les six joueurs de la PAM en t-shirt jaune, devant une camionnette jaune" width="640" height="640"><figcaption>La PAM · ${fin.length} éditions archivées</figcaption></figure>`;
+  return `<section class="view">${photo}${hero}
+    <div class="card"><div class="row" style="justify-content:space-between"><h2>Le mur des lanternes rouges</h2><span class="small muted">Touchez une année pour voir le détail</span></div><div style="height:12px"></div>${wall()}</div>
+    <div class="card"><h2>Classement de toujours</h2><p class="small muted">Sur les ${fin.length} éditions dont les résultats sont archivés. Ici, le meilleur est celui qui a le moins perdu : classement par nombre de dernières places, puis d'épreuves perdues.</p>${allTimeTable()}</div>
+    <div class="card"><div class="label">Titres since 2012</div>${countBars("titles", "")}</div>
+  </section>`;
+}
+function countBars(key) {
+  const st = careerStats();
+  const rows = Object.values(st).map(r => Object.assign({}, r, { titles: r[key] })).sort((a, b) => b.titles.length - a.titles.length || (key === "lasts" ? b.eventLosses - a.eventLosses : b.podiums - a.podiums));
+  const max = Math.max(1, ...rows.map(r => r.titles.length));
+  return `<div style="display:grid;gap:10px;margin-top:10px">${rows.map(r => `
+    <div style="display:grid;grid-template-columns:96px 1fr 28px;gap:10px;align-items:center">
+      <span style="font-weight:600">${esc(pName(r.pid))}</span>
+      <span style="height:14px;border-radius:7px;background:var(--surface-2);overflow:hidden"><span style="display:block;height:100%;width:${(r.titles.length / max) * 100}%;background:${esc(stroke(r.pid))};border-radius:7px"></span></span>
+      <span class="num" style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;text-align:right">${r.titles.length}</span>
+    </div>`).join("")}</div><p class="small muted" style="margin:10px 0 0">${rows.filter(r => r.titles.length).map(r => `${esc(pName(r.pid))} : ${r.titles.join(", ")}`).join(" · ")}</p>`;
+}
+function wall() {
+  const eds = yearsSorted();
+  if (!eds.length) return "";
+  const minY = Math.min(2012, eds[0].year), maxY = eds[eds.length - 1].year;
+  let html = "";
+  for (let y = minY; y <= maxY; y++) {
+    const ed = S.editions[y];
+    if (ed && hasResults(ed)) {
+      const { list } = standings(ed);
+      const losers = list.filter(r => r.last);
+      const champs = list.filter(r => r.rank === 1);
+      const done = ed.status === "terminee";
+      html += `<a class="tile" href="#edition-${y}"><span class="y">${y}${done ? "" : " · en cours"}</span><span class="n lose">${losers.map(c => esc(pName(c.pid))).join(" & ")}</span><span class="small muted num">${losers.length ? losers[0].total + " pts · " : ""}1<sup>er</sup> ${champs.map(c => esc(pName(c.pid))).join(" & ")}</span></a>`;
+    } else if (ed) {
+      html += `<a class="tile gap" href="#edition-${y}"><span class="y">${y}</span><span class="n">${ed.status === "a_completer" ? "Résultats à retrouver" : "À venir"}</span></a>`;
+    } else {
+      html += `<div class="tile gap"><span class="y">${y}</span><span class="n">Pas d'édition connue</span></div>`;
+    }
+  }
+  return `<div class="wall">${html}</div>`;
+}
+function allTimeTable() {
+  const st = Object.values(careerStats()).sort((a, b) => b.lasts.length - a.lasts.length || b.eventLosses - a.eventLosses || b.rankSum / b.eds - a.rankSum / a.eds);
+  return `<div class="tbl-wrap"><table>
+    <thead><tr><th class="left">Joueur</th><th>Dernières places</th><th>Épreuves perdues</th><th>Place moy.</th><th>Pire total</th><th>Titres</th><th>Éditions</th></tr></thead>
+    <tbody>${st.map((s, i) => `<tr class="${i === 0 && s.lasts.length ? "last" : ""}"><td class="left">${chip(s.pid)}</td><td class="total">${s.lasts.length}</td><td>${s.eventLosses} <span class="muted small">/ ${s.events}</span></td><td>${(s.rankSum / s.eds).toFixed(1).replace(".", ",")}</td><td>${s.worst ? `${s.worst.total} <span class="muted small">(${s.worst.year})</span>` : "–"}</td><td>${s.titles.length}</td><td>${s.eds}</td></tr>`).join("")}</tbody>
+  </table></div>`;
+}
+function bumpChart() {
+  const fin = finished();
+  if (fin.length < 2) return `<p class="muted">Il faut au moins deux éditions terminées.</p>`;
+  const W = 760, H = 280, padL = 34, padR = 70, padT = 20, padB = 34;
+  const maxRank = Math.max(6, ...fin.map(ed => (ed.players || []).length));
+  const x = i => padL + (i * (W - padL - padR)) / (fin.length - 1);
+  const y = r => padT + ((r - 1) * (H - padT - padB)) / (maxRank - 1);
+  let g = "";
+  for (let r = 1; r <= maxRank; r++) g += `<line x1="${padL}" x2="${W - padR}" y1="${y(r)}" y2="${y(r)}" stroke="var(--line)" stroke-width="1"/><text x="${padL - 10}" y="${y(r) + 4}" text-anchor="end" font-size="12" fill="var(--muted)">${r}</text>`;
+  fin.forEach((ed, i) => { g += `<text x="${x(i)}" y="${H - 10}" text-anchor="middle" font-size="12" fill="var(--muted)">${ed.year}</text>`; });
+  const pids = Object.keys(S.players).sort((a, b) => (S.players[a].order || 99) - (S.players[b].order || 99));
+  for (const pid of pids) {
+    const pts = []; fin.forEach((ed, i) => { const r = standings(ed).list.find(o => o.pid === pid); if (r) pts.push([x(i), y(r.rank), r.rank]); });
+    if (!pts.length) continue;
+    const c = esc(stroke(pid));
+    g += `<polyline points="${pts.map(p => p[0] + "," + p[1]).join(" ")}" fill="none" stroke="${c}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>`;
+    g += pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="${p[2] === 1 ? 6 : 4}" fill="${p[2] === 1 ? "var(--gold)" : c}" stroke="var(--surface)" stroke-width="2"/>`).join("");
+    const lp = pts[pts.length - 1];
+    g += `<text x="${lp[0] + 10}" y="${lp[1] + 4}" font-size="12" font-weight="600" fill="var(--ink)">${esc(pName(pid))}</text>`;
+  }
+  return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Évolution des places au classement final">${g}</svg></div>
+    <p class="small muted" style="margin:6px 0 0">Les années sans résultats archivés sont absentes du graphique. Un point doré marque un titre.</p>`;
+}
+
+function viewEditions() {
+  const eds = yearsSorted();
+  const withData = eds.filter(hasResults);
+  let sel = S.sel && S.editions[S.sel] ? S.editions[S.sel] : withData[withData.length - 1] || eds[eds.length - 1];
+  const bar = `<div class="yearbar">${eds.map(ed => `<a href="#edition-${ed.year}" class="${hasResults(ed) ? "" : "empty"}" aria-current="${sel && ed.year === sel.year}">${ed.year}</a>`).join("")}</div>`;
+  return `<section class="view"><div class="card" style="display:grid;gap:14px"><h2>Les éditions</h2>${bar}</div>${sel ? editionDetail(sel) : ""}</section>`;
+}
+function fmtDate(d) { if (!d) return ""; const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }); }
+function statusLabel(s) { return { terminee: "Terminée", en_cours: "En cours", prevue: "En préparation", a_completer: "Résultats à retrouver" }[s] || ""; }
+function editionDetail(ed) {
+  const meta = [fmtDate(ed.date), ed.lieu ? esc(ed.lieu) : "", statusLabel(ed.status)].filter(Boolean).join(" · ");
+  const edit = S.canWrite !== false && !S.readOnly ? `<a class="btn small" href="#jour-j" data-act="goto-jour" data-year="${ed.year}">Modifier / saisir</a>` : "";
+  if (!hasResults(ed)) {
+    return `<div class="card"><div class="evhead"><h2>Édition ${ed.year}</h2>${edit}</div><p class="muted">${meta}</p>
+      <p>${ed.notes ? esc(ed.notes) : "Aucun résultat saisi pour l'instant."}</p>
+      ${(ed.events || []).length ? `<p class="small">Programme : ${ed.events.map(e => esc(e.name)).join(", ")}</p>` : ""}</div>`;
+  }
+  const { worstFirst: list } = standings(ed);
+  const evs = ed.events || [];
+  const rowsBy = {}; evs.forEach(ev => rowsBy[ev.id] = eventRows(ed, ev));
+  const lossCount = pid => evs.filter(ev => (rowsBy[ev.id][pid] || {}).last).length;
+  const head = `<tr><th></th><th class="left">Joueur</th><th>Total</th><th>Défaites</th>${evs.map(ev => `<th class="ev">${esc(ev.name)}${ev.team ? `<br><span class="team-tag">équipe</span>` : ""}</th>`).join("")}</tr>`;
+  const body = list.map(r => `<tr class="${r.last ? "last" : r.rank === 1 ? "first" : ""}"><td class="rank">${r.rank}</td><td class="left">${chip(r.pid)}</td><td class="total">${r.total}</td><td class="total">${lossCount(r.pid)}</td>${evs.map(ev => {
+      const x = rowsBy[ev.id][r.pid] || {};
+      if (x.pts == null) return `<td class="muted">–</td>`;
+      return `<td class="${x.last ? "loss" : x.place === 1 ? "win" : ""}"><span class="cell-pts">${x.pts}</span>${x.joker ? `<span class="jk" title="Joker">J</span>` : ""}<span class="cell-place">${esc(x.label || (x.place ? x.place + "e" : ""))}</span></td>`;
+    }).join("")}</tr>`).join("");
+  return `<div class="card" style="display:grid;gap:12px">
+    <div class="evhead"><h2>Édition ${ed.year}</h2>${edit}</div>
+    ${meta ? `<p class="muted" style="margin:0">${meta}</p>` : ""}
+    <div class="tbl-wrap"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>
+    <p class="small muted" style="margin:0">Classement affiché du dernier au premier. Chaque case : points marqués, puis place dans l'épreuve. Case rouge = épreuve perdue (dernière place ou abandon). Trait doré = épreuve gagnée. <span class="jk">J</span> = joker (points doublés).</p>
+    ${ed.notes ? `<p class="small muted" style="margin:0">${esc(ed.notes)}</p>` : ""}
+  </div>`;
+}
+
+function viewJoueurs() {
+  const st = careerStats();
+  const pids = Object.keys(S.players).sort((a, b) => (S.players[a].order || 99) - (S.players[b].order || 99));
+  return `<section class="view"><h2>Les joueurs</h2><div class="players">${pids.map(pid => {
+    const s = st[pid];
+    const p = S.players[pid];
+    if (!s) return `<div class="card pcard" style="--s:${esc(p.stroke)}"><h3>${esc(p.name)}</h3><p class="muted">Pas encore d'édition terminée.</p></div>`;
+    const evs = Object.values(s.byEvent).filter(b => b.n >= 2);
+    const fav = evs.slice().sort((a, b) => a.losses - b.losses || b.wins - a.wins || (a.placeSum / Math.max(1, a.placed)) - (b.placeSum / Math.max(1, b.placed)))[0];
+    const worst = evs.slice().sort((a, b) => b.losses - a.losses || (b.placeSum / Math.max(1, b.placed)) - (a.placeSum / Math.max(1, a.placed)))[0];
+    const jAvg = s.jokerPts.length ? Math.round(s.jokerPts.reduce((t, j) => t + j.pts, 0) / s.jokerPts.length) : null;
+    const jBest = s.jokerPts.slice().sort((a, b) => b.pts - a.pts)[0];
+    return `<div class="card pcard" style="--s:${esc(p.stroke)}">
+      <h3>${esc(p.name)}</h3>
+      <div class="stats"><div class="stat"><b class="num" style="color:var(--loss)">${s.lasts.length}</b><span>dernière${s.lasts.length > 1 ? "s" : ""} place${s.lasts.length > 1 ? "s" : ""}</span></div><div class="stat"><b class="num" style="color:var(--loss)">${s.eventLosses}</b><span>épreuves perdues</span></div><div class="stat"><b class="num">${s.titles.length}</b><span>titre${s.titles.length > 1 ? "s" : ""}</span></div></div>
+      <dl class="kv">
+        <dt>Lanterne rouge</dt><dd>${s.lasts.length ? s.lasts.join(", ") : "jamais"}</dd>
+        <dt>Parcours</dt><dd class="num">${s.totals.map(t => t.last ? `<span style="color:var(--loss);font-weight:600">${t.year} : ${t.rank}<sup>e</sup></span>` : `${t.year} : ${t.rank}<sup>e</sup>`).join(" · ")}</dd>
+        <dt>Pire total</dt><dd>${s.worst.total} points en ${s.worst.year}</dd>
+        ${worst && worst.losses ? `<dt>Bête noire</dt><dd>${esc(worst.name)} (${worst.losses} défaite${worst.losses > 1 ? "s" : ""} sur ${worst.n})</dd>` : ""}
+        ${fav && fav !== worst ? `<dt>Valeur refuge</dt><dd>${esc(fav.name)} (${fav.losses ? fav.losses + " défaite" + (fav.losses > 1 ? "s" : "") : "jamais dernier"} sur ${fav.n})</dd>` : ""}
+        <dt>Titres</dt><dd>${s.titles.length ? s.titles.join(", ") : "pas encore"}</dd>
+      </dl>
+      ${playerEventTable(s)}
+      <dl class="kv" style="margin-top:10px">
+        ${jAvg != null ? `<dt>Joker</dt><dd>${jAvg} pts en moyenne${jBest ? ` · meilleur : ${jBest.pts} pts (${esc(jBest.ev)}, ${jBest.year})` : ""}</dd>` : ""}
+      </dl>
+    </div>`;
+  }).join("")}</div></section>`;
+}
+
+const fmt1 = v => v.toFixed(1).replace(".", ",");
+const avgBase = b => b.base / Math.max(1, b.n);
+function jokerPicks(s) {
+  return Object.values(s.byEvent).filter(b => b.n >= 2).sort((a, b) => avgBase(b) - avgBase(a) || a.losses - b.losses).slice(0, 3).map(b => b.key);
+}
+function playerEventTable(s) {
+  const all = Object.values(s.byEvent);
+  const rows = all.filter(b => b.n >= 2).sort((a, b) => avgBase(b) - avgBase(a) || a.losses - b.losses);
+  const once = all.length - rows.length;
+  if (!rows.length) return "";
+  const picks = jokerPicks(s);
+  return `<div style="display:grid;gap:8px;margin-top:14px">
+    <div class="label">Palmarès par épreuve · où poser le joker</div>
+    <div class="tbl-wrap"><table class="small">
+      <thead><tr><th class="left">Épreuve</th><th>Jouée</th><th title="Points moyens sans le joker">Pts moy.</th><th>Déf.</th><th>Vict.</th></tr></thead>
+      <tbody>${rows.map(b => { const pick = picks.includes(b.key); return `<tr><td class="left">${esc(b.name)}${pick ? ` <span class="jk" title="Joker conseillé">J</span>` : ""}</td><td>${b.n}×</td><td class="cell-pts">${fmt1(avgBase(b))}</td><td style="${b.losses ? "color:var(--loss);font-weight:600" : ""}">${b.losses}</td><td>${b.wins}</td></tr>`; }).join("")}</tbody>
+    </table></div>
+    <p class="small muted" style="margin:0"><span class="jk">J</span> = les 3 épreuves où il marque le plus en moyenne (hors joker) : c'est là que le joker rapporte le plus. Épreuves jouées au moins 2 fois${once ? ` ; ${once} autre${once > 1 ? "s" : ""} jouée${once > 1 ? "s" : ""} une seule fois` : ""}.</p>
+  </div>`;
+}
+function jokerAdvice(ed) {
+  const evs = ed.events || [];
+  if (!evs.length) return "";
+  const st = careerStats();
+  const players = (ed.players || []).slice().sort((a, b) => (S.players[a]?.order || 99) - (S.players[b]?.order || 99));
+  const lines = players.map(pid => {
+    const s = st[pid];
+    const cands = evs.map(ev => { const b = s && s.byEvent[normEvent(ev.name)]; return b ? { ev, b, avg: avgBase(b) } : null; }).filter(Boolean).sort((a, b) => b.avg - a.avg || a.b.losses - b.b.losses);
+    const best = cands[0];
+    const posed = (ed.jokers || {})[pid];
+    const posedEv = posed && evs.find(e => e.id === posed);
+    const txt = best ? `<b>${esc(best.ev.name)}</b> <span class="muted">(${fmt1(best.avg)} pts en moyenne sur ${best.b.n} fois${best.b.losses ? `, ${best.b.losses} défaite${best.b.losses > 1 ? "s" : ""}` : ""})</span>` : `<span class="muted">aucune épreuve du programme déjà jouée</span>`;
+    return `<div class="row" style="gap:8px">${chip(pid)} ${txt}${posedEv ? ` <span class="small">· joker posé : ${esc(posedEv.name)}</span>` : ""}</div>`;
+  }).join("");
+  return `<div class="card" style="display:grid;gap:8px"><h3>Conseils joker</h3><p class="small muted" style="margin:0">Pour chaque joueur, l'épreuve du programme où il marque le plus en moyenne d'après l'historique.</p>${lines}</div>`;
+}
+
+function viewEpreuves() {
+  const all = eventPalmares();
+  const multi = all.filter(e => e.years.length >= 2);
+  const once = all.filter(e => e.years.length < 2);
+  const names = list => list.map(p => esc(pName(p))).join(" & ") || "–";
+  const card = e => {
+    const players = Object.values(e.byPlayer).sort((a, b) => b.l - a.l || a.w - b.w || (b.placeSum / Math.max(1, b.placed)) - (a.placeSum / Math.max(1, a.placed)));
+    const maxL = Math.max(...players.map(p => p.l));
+    return `<div class="card" style="display:grid;gap:12px">
+      <div class="evhead"><h3>${esc(e.name)} ${e.team ? `<span class="team-tag">équipe</span>` : ""}</h3><span class="small muted">jouée ${e.years.length} fois</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th class="left">Joueur</th><th>Défaites</th><th>Victoires</th><th>Place moy.</th></tr></thead>
+        <tbody>${players.map(p => `<tr class="${p.l && p.l === maxL ? "last" : ""}"><td class="left">${chip(p.pid)}</td><td class="total">${p.l}</td><td>${p.w}</td><td>${p.placed ? (p.placeSum / p.placed).toFixed(1).replace(".", ",") : "–"}</td></tr>`).join("")}</tbody>
+      </table></div>
+      <div class="small" style="display:grid;gap:4px">${e.years.slice().reverse().map(y => `<div><a href="#edition-${y.year}" style="color:inherit;font-weight:600">${y.year}</a> · <span style="color:var(--loss)">dernier : ${names(y.losers)}</span> · <span class="muted">1<sup>er</sup> : ${names(y.winners)}</span></div>`).join("")}</div>
+    </div>`;
+  };
+  return `<section class="view">
+    <div class="card"><h2>Palmarès par épreuve</h2><p class="small muted" style="margin:6px 0 0">Pour chaque épreuve jouée au moins deux fois : qui l'a le plus souvent perdue (dernière place ou abandon), puis qui l'a gagnée. Les épreuves au nom proche (Molky et Mölkky, Palets et Boîte à palets…) sont regroupées.</p></div>
+    <div class="players">${multi.map(card).join("")}</div>
+    ${once.length ? `<div class="card"><h2>Jouées une seule fois</h2><div style="height:10px"></div><div class="tbl-wrap"><table>
+      <thead><tr><th class="left">Épreuve</th><th>Année</th><th>Dernier</th><th>1<sup>er</sup></th></tr></thead>
+      <tbody>${once.map(e => { const y = e.years[0]; return `<tr><td class="left">${esc(e.name)} ${e.team ? `<span class="team-tag">équipe</span>` : ""}</td><td><a href="#edition-${y.year}" style="color:inherit">${y.year}</a></td><td style="color:var(--loss);font-weight:600">${names(y.losers)}</td><td>${names(y.winners)}</td></tr>`; }).join("")}</tbody>
+    </table></div></div>` : ""}
+  </section>`;
+}
+
+function viewRules() {
+  const ex = [1, 2, 3, 4, 5].map(n => `<tr><td>${n} ex</td><td class="num">${basePts(n, 2)}</td><td>${n} ex²</td><td class="num">${n <= 4 ? basePts(n, 3) : "–"}</td></tr>`).join("");
+  return `<section class="view rules"><div class="grid2">
+    <div class="card"><h2>Barème</h2><p class="muted small">Points façon Formule 1, selon la place dans chaque épreuve.</p>
+      <div class="tbl-wrap"><table><thead><tr><th>Place</th>${BASE.slice(0, 6).map((_, i) => `<th>${i + 1}<sup>${i ? "e" : "er"}</sup></th>`).join("")}</tr></thead>
+      <tbody><tr><td class="label">Points</td>${BASE.slice(0, 6).map(b => `<td class="total">${b}</td>`).join("")}</tr></tbody></table></div>
+      <p class="small muted">Au-delà de 6 joueurs : 6, 4, 2, 1 points.</p></div>
+    <div class="card"><h2>Ex aequo</h2><p class="muted small">Les joueurs à égalité se partagent les points des places concernées (moyenne arrondie à l'inférieur). « ex » = 2 joueurs, « ex² » = 3 joueurs.</p>
+      <div class="tbl-wrap"><table><thead><tr><th>2 joueurs</th><th>Pts</th><th>3 joueurs</th><th>Pts</th></tr></thead><tbody>${ex}</tbody></table></div></div>
+  </div>
+  <div class="card"><h2>Les règles du jeu</h2><ul>
+    <li><b>Joker</b> : chaque joueur pose un joker sur l'épreuve de son choix, avant qu'elle commence. Les points de cette épreuve sont doublés.</li>
+    <li><b>Abandon</b> : ${ABANDON} point.</li>
+    <li><b>Épreuves par équipes</b> : chaque duo affronte les autres. Victoire = 3, nul = 2, défaite = 1. Le score d'un joueur est la somme des points de ses duos, et c'est ce score qui donne sa place.</li>
+    <li><b>Classement final</b> : somme des points de toutes les épreuves. Égalité au total = titre partagé.</li>
+  </ul><p class="small muted">Le règlement complet (ROJS v2019.1) reste dans le dossier OneDrive.</p></div></section>`;
+}
+
+// ---------- Jour J ----------
+function currentJourEdition() {
+  if (S.jourSel && S.editions[S.jourSel]) return S.editions[S.jourSel];
+  const eds = yearsSorted();
+  const open = eds.filter(e => e.status === "en_cours" || e.status === "prevue");
+  return open[open.length - 1] || null;
+}
+function viewJourJ() {
+  const ed = currentJourEdition();
+  const ro = S.canWrite === false || S.readOnly;
+  const eds = yearsSorted().slice().reverse();
+  const nextYear = Math.max(new Date().getFullYear(), ...eds.map(e => e.year + 1));
+  const picker = `<div class="card" style="display:grid;gap:12px">
+    <h2>Jour J</h2>
+    ${ro ? (S.user ? `<div class="notice">Ton adresse (${esc(S.user.email || "")}) n'est pas dans la liste des joueurs autorisés à saisir. Demande à l'organisateur de l'ajouter.</div>` : `<div class="notice row" style="justify-content:space-between">Connecte-toi avec ton compte Google pour saisir les scores. <button class="btn primary small" data-act="login">Se connecter</button></div>`) : ""}
+    <div class="row">
+      <label class="field"><span>Édition à saisir</span>
+        <select id="jour-pick">${eds.map(e => `<option value="${e.year}" ${ed && e.year === ed.year ? "selected" : ""}>${e.year} — ${statusLabel(e.status)}</option>`).join("")}${ed ? "" : `<option value="" selected>Choisir…</option>`}</select></label>
+      ${ro ? "" : `<label class="field"><span>Nouvelle édition</span><span class="row"><input type="number" id="new-year" value="${nextYear}" min="2000" max="2100" aria-label="Année"><button class="btn primary" data-act="new-edition">Créer</button></span></label>`}
+    </div>
+  </div>`;
+  if (!ed) return `<section class="view">${picker}<div class="card empty-state"><h3>Aucune édition en préparation</h3><p>Créez l'édition de cette année : vous choisirez ensuite les joueurs et les épreuves, puis vous saisirez les résultats ici même pendant le week-end.</p></div></section>`;
+  return `<section class="view">${picker}${liveBar(ed)}${setupPanel(ed, ro)}${ed.status === "terminee" ? "" : jokerAdvice(ed)}${(ed.events || []).map(ev => eventCard(ed, ev, ro)).join("")}
+    ${ro || !(ed.events || []).length ? "" : `<div class="card row" style="justify-content:space-between"><span class="muted">Toutes les épreuves sont jouées ?</span>
+      ${ed.status === "terminee" ? `<button class="btn" data-act="status" data-v="en_cours">Rouvrir l'édition</button>` : `<button class="btn primary" data-act="status" data-v="terminee">Clôturer l'édition ${ed.year}</button>`}</div>`}
+  </section>`;
+}
+function liveBar(ed) {
+  const { worstFirst, any } = standings(ed);
+  if (!any) return `<div class="livebar"><span class="label">Classement ${ed.year}</span><span class="it">en attente des premiers résultats</span></div>`;
+  return `<div class="livebar"><span class="label">Classement ${ed.year}, du dernier au premier</span>${worstFirst.map(r => `<span class="it num"${r.last ? ` style="color:var(--loss)"` : ""}><b>${r.rank}</b>${esc(pName(r.pid))} ${r.total}</span>`).join("")}</div>`;
+}
+function setupPanel(ed, ro) {
+  const evs = ed.events || [];
+  const open = S.openSetup || !evs.length;
+  const pids = Object.keys(S.players).sort((a, b) => (S.players[a].order || 99) - (S.players[b].order || 99));
+  if (ro) return `<div class="card"><h3>Programme ${ed.year}</h3><p class="muted">${[fmtDate(ed.date), esc(ed.lieu || "")].filter(Boolean).join(" · ") || "Date et lieu à définir"}</p></div>`;
+  return `<details class="card setup" id="setup" ${open ? "open" : ""}><summary>Préparer l'édition ${ed.year}</summary>
+    <div style="display:grid;gap:16px;margin-top:14px">
+      <div class="row">
+        <label class="field"><span>Date</span><input type="date" id="s-date" value="${esc(ed.date || "")}"></label>
+        <label class="field" style="flex:1;min-width:180px"><span>Lieu</span><input type="text" id="s-lieu" value="${esc(ed.lieu || "")}" placeholder="Gîte, ville…"></label>
+        <label class="field"><span>Statut</span><select id="s-status">${["prevue", "en_cours", "terminee", "a_completer"].map(s => `<option value="${s}" ${ed.status === s ? "selected" : ""}>${statusLabel(s)}</option>`).join("")}</select></label>
+      </div>
+      <div class="field"><span>Joueurs</span><div class="row">${pids.map(pid => `<label class="check"><input type="checkbox" class="s-player" value="${esc(pid)}" ${(ed.players || []).includes(pid) ? "checked" : ""}>${esc(pName(pid))}</label>`).join("")}
+        <span class="row"><input type="text" id="s-newplayer" placeholder="Nouveau joueur" style="width:150px"><button class="btn small" data-act="add-player">Ajouter</button></span></div></div>
+      <div class="field"><span>Épreuves (dans l'ordre du week-end)</span>
+        <div class="evlist" id="s-evlist">${evs.map((ev, i) => evRow(ev, i, evs.length)).join("")}</div>
+        <div><button class="btn small" data-act="add-event">+ Ajouter une épreuve</button></div>
+      </div>
+      <div class="field"><span>Notes</span><textarea id="s-notes" rows="2">${esc(ed.notes || "")}</textarea></div>
+      <div class="row"><button class="btn primary" data-act="save-setup">Enregistrer le programme</button><span class="small muted">Les résultats déjà saisis sont conservés.</span></div>
+    </div></details>`;
+}
+function evRow(ev, i, n) {
+  return `<div class="evrow" data-id="${esc(ev.id)}">
+    <input type="text" class="s-evname" id="s-evname-${esc(ev.id)}" value="${esc(ev.name)}" placeholder="Nom de l'épreuve" aria-label="Nom de l'épreuve">
+    <input type="text" class="s-evmoment" id="s-evmoment-${esc(ev.id)}" value="${esc(ev.moment || "")}" placeholder="Moment (ex. samedi matin)" aria-label="Moment">
+    <label class="check"><input type="checkbox" class="s-evteam" ${ev.team ? "checked" : ""}>Par équipes</label>
+    <span class="row" style="gap:4px"><button class="btn small" data-act="ev-up" ${i === 0 ? "disabled" : ""} aria-label="Monter">↑</button><button class="btn small" data-act="ev-down" ${i === n - 1 ? "disabled" : ""} aria-label="Descendre">↓</button><button class="btn small" data-act="ev-del" aria-label="Supprimer">✕</button></span>
+  </div>`;
+}
+function pairKey(a, b) { return [a, b].sort().join("__"); }
+function teamScores(ed, ev) {
+  const pr = ((ed.pairs || {})[ev.id]) || {};
+  const sc = {}; for (const pid of ed.players || []) sc[pid] = null;
+  for (const k in pr) { const v = pr[k]; if (typeof v !== "number") continue; const [a, b] = k.split("__"); if (a in sc) sc[a] = (sc[a] || 0) + v; if (b in sc) sc[b] = (sc[b] || 0) + v; }
+  return sc;
+}
+function eventCard(ed, ev, ro) {
+  const rows = eventRows(ed, ev);
+  const n = (ed.players || []).length;
+  const ts = ev.team ? teamScores(ed, ev) : null;
+  const opts = cur => `<option value="">–</option>${Array.from({ length: n }, (_, i) => `<option value="${i + 1}" ${placeNum(cur) === i + 1 && !isAB(cur) ? "selected" : ""}>${i + 1}</option>`).join("")}<option value="AB" ${isAB(cur) ? "selected" : ""}>Abandon</option>`;
+  const res = (ed.results || {})[ev.id] || {};
+  const players = (ed.players || []).slice().sort((a, b) => (S.players[a]?.order || 99) - (S.players[b]?.order || 99));
+  const lines = players.map(pid => {
+    const x = rows[pid] || {};
+    const r = res[pid] || {};
+    const jokerElsewhere = (ed.jokers || {})[pid] && (ed.jokers || {})[pid] !== ev.id;
+    const scoreVal = ev.team ? (ts[pid] == null ? "" : ts[pid]) : (r.score == null ? "" : r.score);
+    return `<div class="entry">
+      <span>${chip(pid)}</span>
+      <input type="number" step="any" id="sc-${esc(ev.id)}-${esc(pid)}" data-act="score" data-ev="${esc(ev.id)}" data-p="${esc(pid)}" value="${esc(scoreVal)}" ${ro || ev.team ? "disabled" : ""} aria-label="Score de ${esc(pName(pid))}">
+      <select id="pl-${esc(ev.id)}-${esc(pid)}" data-act="place" data-ev="${esc(ev.id)}" data-p="${esc(pid)}" ${ro ? "disabled" : ""} aria-label="Place de ${esc(pName(pid))}">${opts(r.place)}</select>
+      <button class="btn small ${x.joker ? "on" : ""}" data-act="joker" data-ev="${esc(ev.id)}" data-p="${esc(pid)}" ${ro ? "disabled" : ""} title="${jokerElsewhere ? "Joker déjà posé sur une autre épreuve : cliquer pour le déplacer ici" : "Poser le joker sur cette épreuve"}">Joker${jokerElsewhere ? " ·" : ""}</button>
+      <span class="pts num">${x.pts == null ? "–" : x.pts}</span>
+    </div>`;
+  }).join("");
+  let pairsHtml = "";
+  if (ev.team) {
+    const pr = ((ed.pairs || {})[ev.id]) || {};
+    const ps = [];
+    for (let i = 0; i < players.length; i++) for (let j = i + 1; j < players.length; j++) ps.push([players[i], players[j]]);
+    pairsHtml = `<div class="field"><span>Points des duos (cumul des matchs : victoire 3, nul 2, défaite 1)</span><div class="pairs">${ps.map(([a, b]) => { const k = pairKey(a, b); return `<label class="pair"><span>${esc(pName(a))} / ${esc(pName(b))}</span><input type="number" step="any" id="pr-${esc(ev.id)}-${esc(k)}" data-act="pair" data-ev="${esc(ev.id)}" data-k="${esc(k)}" value="${pr[k] == null ? "" : esc(pr[k])}" ${ro ? "disabled" : ""}></label>`; }).join("")}</div></div>`;
+  }
+  return `<div class="card evcard">
+    <div class="evhead"><h3>${esc(ev.name)} ${ev.team ? `<span class="team-tag">équipe</span>` : ""}</h3><span class="small muted">${esc(ev.moment || "")}</span></div>
+    ${pairsHtml}
+    <div class="entry head"><span>Joueur</span><span>Score</span><span>Place</span><span></span><span style="text-align:right">Pts</span></div>
+    ${lines}
+    ${ro ? "" : `<div class="row small"><span class="muted">Classer d'après les scores :</span><button class="btn small" data-act="rank" data-ev="${esc(ev.id)}" data-dir="desc">le plus haut gagne</button><button class="btn small" data-act="rank" data-ev="${esc(ev.id)}" data-dir="asc">le plus bas gagne</button><button class="btn small" data-act="clear" data-ev="${esc(ev.id)}">Effacer les places</button></div>`}
+  </div>`;
+}
+
+// ---------- Écritures ----------
+const queues = {};
+function save(year, patch) {
+  if (!S.db) { setStatus("Enregistrement impossible : la base de données n'est pas disponible.", true); return Promise.resolve(); }
+  const key = String(year);
+  const ref = S.db.doc("editions/" + key);
+  queues[key] = (queues[key] || Promise.resolve()).then(() => ref.set(patch, { merge: true })).then(() => setStatus("Enregistré.")).catch(err => onWriteError(err));
+  return queues[key];
+}
+function onWriteError(err) {
+  const code = err && err.code;
+  if (code === "permission-denied") { S.readOnly = true; setStatus(S.user ? "Ton adresse n'est pas autorisée à saisir : la page passe en lecture seule." : "Connecte-toi pour saisir les scores.", true); render(); return; }
+  if (code === "resource-exhausted") { setStatus("Le quota gratuit de la base de données est atteint pour aujourd'hui.", true); return; }
+  setStatus("L'enregistrement a échoué. Vérifiez la connexion puis recommencez.", true);
+}
+function nested(obj, path, value) { let o = obj; for (let i = 0; i < path.length - 1; i++) o = o[path[i]] = o[path[i]] || {}; o[path[path.length - 1]] = value; return obj; }
+
+function rankFromScores(ed, ev, dir) {
+  const scores = ev.team ? teamScores(ed, ev) : Object.fromEntries((ed.players || []).map(pid => [pid, ((ed.results || {})[ev.id] || {})[pid]?.score]));
+  const valid = Object.keys(scores).filter(pid => typeof scores[pid] === "number");
+  if (!valid.length) { setStatus("Saisissez d'abord les scores de l'épreuve.", true); return; }
+  const better = (a, b) => dir === "asc" ? a < b : a > b;
+  const patch = { results: { [ev.id]: {} } };
+  for (const pid of valid) patch.results[ev.id][pid] = { place: 1 + valid.filter(o => better(scores[o], scores[pid])).length };
+  save(ed.year, patch);
+}
+
+async function createEdition(year) {
+  if (!S.db) return;
+  year = parseInt(year, 10);
+  if (!(year >= 2000 && year <= 2100)) { setStatus("Indiquez une année valide.", true); return; }
+  if (S.editions[year]) { S.jourSel = year; location.hash = "#jour-j"; render(); setStatus(`L'édition ${year} existe déjà : elle est ouverte ci-dessous.`); return; }
+  const players = Object.keys(S.players).sort((a, b) => (S.players[a].order || 99) - (S.players[b].order || 99));
+  try {
+    await S.db.doc("editions/" + year).set({ year, status: "prevue", source: "app", date: "", lieu: "", players, events: [], results: {}, jokers: {}, pairs: {}, notes: "" });
+    S.jourSel = year; S.openSetup = true; setStatus(`Édition ${year} créée. Ajoutez maintenant les épreuves.`);
+  } catch (e) { onWriteError(e); }
+}
+function readSetup(ed) {
+  const rows = Array.from(document.querySelectorAll("#s-evlist .evrow"));
+  const events = rows.map(r => {
+    const old = (ed.events || []).find(e => e.id === r.dataset.id) || {};
+    return { id: r.dataset.id, name: r.querySelector(".s-evname").value.trim() || "Épreuve", moment: r.querySelector(".s-evmoment").value.trim(), team: r.querySelector(".s-evteam").checked, ...(old.extra ? { extra: old.extra } : {}) };
+  });
+  return {
+    date: document.getElementById("s-date").value,
+    lieu: document.getElementById("s-lieu").value.trim(),
+    status: document.getElementById("s-status").value,
+    notes: document.getElementById("s-notes").value.trim(),
+    players: Array.from(document.querySelectorAll(".s-player")).filter(c => c.checked).map(c => c.value),
+    events
+  };
+}
+function slug(s) { return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "").slice(0, 24); }
+const PALETTE = [["#D7C4F2", "#6E4BB8"], ["#BDE6E1", "#1F8A7E"], ["#F7C6DD", "#B83C7A"], ["#DAD7C8", "#7A6F3D"], ["#C9D9F7", "#2D5FB8"], ["#F2D5B3", "#A65E14"]];
+
+$app.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b || b.tagName === "SELECT" || b.tagName === "INPUT") return;
+  const act = b.dataset.act; const ed = currentJourEdition();
+  if (act === "goto-jour") { S.jourSel = +b.dataset.year; return; }
+  if (act === "new-edition") { e.preventDefault(); createEdition(document.getElementById("new-year").value); return; }
+  if (!ed) return;
+  if (act === "joker") {
+    const pid = b.dataset.p, ev = b.dataset.ev; const cur = (ed.jokers || {})[pid];
+    save(ed.year, { jokers: { [pid]: cur === ev ? "" : ev } });
+  } else if (act === "rank") rankFromScores(ed, (ed.events || []).find(x => x.id === b.dataset.ev), b.dataset.dir);
+  else if (act === "clear") {
+    const patch = { results: { [b.dataset.ev]: {} } }; for (const pid of ed.players || []) patch.results[b.dataset.ev][pid] = { place: "" };
+    save(ed.year, patch);
+  } else if (act === "status") save(ed.year, { status: b.dataset.v });
+  else if (act === "save-setup") { S.openSetup = false; await save(ed.year, readSetup(ed)); }
+  else if (act === "add-event") {
+    const setup = readSetup(ed); const id = "e" + Date.now().toString(36);
+    setup.events.push({ id, name: "Nouvelle épreuve", moment: "", team: false }); S.openSetup = true;
+    await save(ed.year, setup);
+    setTimeout(() => { const el = document.getElementById("s-evname-" + id); if (el) { el.focus(); el.select(); } }, 50);
+  } else if (act === "ev-del" || act === "ev-up" || act === "ev-down") {
+    const setup = readSetup(ed); const id = b.closest(".evrow").dataset.id; const i = setup.events.findIndex(x => x.id === id);
+    if (act === "ev-del") setup.events.splice(i, 1);
+    else { const j = act === "ev-up" ? i - 1 : i + 1; if (j < 0 || j >= setup.events.length) return; [setup.events[i], setup.events[j]] = [setup.events[j], setup.events[i]]; }
+    S.openSetup = true; save(ed.year, setup);
+  } else if (act === "add-player") {
+    const name = document.getElementById("s-newplayer").value.trim(); if (!name || !S.db) return;
+    let id = slug(name) || "j" + Date.now().toString(36); if (S.players[id]) id += Date.now().toString(36).slice(-3);
+    const n = Object.keys(S.players).length; const [chipC, strokeC] = PALETTE[n % PALETTE.length];
+    try {
+      await S.db.doc("joueurs/" + id).set({ name, order: n + 1, chip: chipC, stroke: strokeC });
+      const setup = readSetup(ed); setup.players.push(id); S.openSetup = true; save(ed.year, setup);
+    } catch (err) { onWriteError(err); }
+  }
+});
+$app.addEventListener("input", e => { if (e.target.matches("input[type=number], input[type=text], textarea")) e.target.dataset.dirty = "1"; });
+$app.addEventListener("change", e => {
+  const t = e.target; const ed = currentJourEdition();
+  if (t.id === "jour-pick") { S.jourSel = t.value ? +t.value : null; render(); return; }
+  if (!ed) return;
+  const act = t.dataset.act;
+  if (act === "score") {
+    const v = t.value.trim() === "" ? null : Number(t.value.replace(",", "."));
+    delete t.dataset.dirty;
+    save(ed.year, nested({}, ["results", t.dataset.ev, t.dataset.p, "score"], v));
+  } else if (act === "place") {
+    const v = t.value === "AB" ? "AB" : t.value === "" ? "" : +t.value;
+    save(ed.year, nested({}, ["results", t.dataset.ev, t.dataset.p, "place"], v));
+  } else if (act === "pair") {
+    const v = t.value.trim() === "" ? null : Number(t.value.replace(",", "."));
+    delete t.dataset.dirty;
+    save(ed.year, nested({}, ["pairs", t.dataset.ev, t.dataset.k], v));
+  }
+});
+document.addEventListener("toggle", e => { if (e.target.id === "setup") S.openSetup = e.target.open; }, true);
+
+// ---------- Navigation ----------
+function route() {
+  const h = (location.hash || "").slice(1);
+  const m = h.match(/^edition-(\d{4})$/);
+  if (m) { S.view = "edition"; S.sel = +m[1]; }
+  else S.view = ["palmares", "editions", "epreuves", "joueurs", "jour-j", "reglement"].includes(h) ? h : "palmares";
+  render();
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", route);
+
+// ---------- Données ----------
+let rerenderTimer = null;
+function scheduleRender() { clearTimeout(rerenderTimer); rerenderTimer = setTimeout(render, 30); }
+const $auth = document.getElementById("authbox");
+function renderAuth() {
+  if (!S.auth) { $auth.innerHTML = ""; return; }
+  if (S.user) $auth.innerHTML = `<span class="who" title="${esc(S.user.email || "")}">${esc(S.user.displayName || S.user.email || "")}</span><button data-act="logout">Déconnexion</button>`;
+  else $auth.innerHTML = `<button class="go" data-act="login">Se connecter</button>`;
+}
+async function login() {
+  try { await S.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+  catch (e) {
+    if (e && (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment")) { S.auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); return; }
+    if (e && e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") setStatus("La connexion a échoué : " + (e.message || e.code), true);
+  }
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act=login],[data-act=logout]"); if (!b || !S.auth) return;
+  e.preventDefault();
+  if (b.dataset.act === "login") login(); else S.auth.signOut();
+});
+
+async function start() {
+  route();
+  const cfg = window.FIREBASE_CONFIG;
+  if (!window.firebase || !cfg || !cfg.apiKey || /A_REMPLACER/.test(cfg.apiKey)) { setStatus("Firebase n'est pas encore configuré : renseigne le fichier firebase-config.js (voir README).", true); S.canWrite = false; S.loaded.e = true; render(); return; }
+  firebase.initializeApp(cfg);
+  const fs = firebase.firestore();
+  S.auth = firebase.auth();
+  S.canWrite = false;
+  S.auth.onAuthStateChanged(u => { S.user = u; S.canWrite = u ? null : false; S.readOnly = false; renderAuth(); render(); });
+  S.db = { doc: p => fs.doc(p), collection: p => fs.collection(p) };
+  const db = S.db;
+  const timer = setTimeout(() => { if (!S.loaded.e) setStatus("Les résultats tardent à arriver : vérifiez votre connexion.", true); }, 10000);
+  db.collection("joueurs").onSnapshot(snap => {
+    const p = {}; snap.docs.forEach(d => { p[d.id] = d.data(); }); S.players = p; S.loaded.p = true; scheduleRender();
+  }, () => setStatus("Impossible de lire la liste des joueurs.", true));
+  db.collection("editions").onSnapshot(snap => {
+    const e = {}; snap.docs.forEach(d => { const x = d.data(); e[x.year || d.id] = Object.assign({ year: +d.id }, x); });
+    S.editions = e; S.loaded.e = true;
+    if (!snap.metadata.fromCache) { clearTimeout(timer); if (/tardent|Chargement/.test($status.textContent)) setStatus(""); }
+    scheduleRender();
+  }, () => { clearTimeout(timer); setStatus("Impossible de lire les éditions.", true); S.loaded.e = true; render(); });
+}
+start();
+})();
+</script>
+</body>
+</html>
