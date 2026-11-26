@@ -1,40 +1,28 @@
 rules_version = '2';
 
-// Règles de sécurité de la base PAM.
-// - Tout le monde peut consulter les résultats.
-// - Pour saisir, un téléphone doit d'abord donner le « code PAM » une fois :
-//   il crée alors son document membres/<son id>, accepté seulement si le code est le bon.
-// - Le code est rangé dans config/acces (champ "code"), lisible par personne : on le change dans la console Firebase.
-// - Personne ne peut supprimer une édition depuis le site.
+// Regles de securite de la base PAM (version simple, sans compte ni code).
+// - Tout le monde peut consulter les resultats.
+// - Tout le monde peut creer un evenement et saisir les resultats.
+// - Personne ne peut supprimer un evenement ou un joueur depuis le site.
+// - Garde-fous : un evenement s'appelle par son annee (2000 a 2100) et reste de taille raisonnable.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function estMembre() {
-      return request.auth != null
-        && exists(/databases/$(database)/documents/membres/$(request.auth.uid));
-    }
-
     match /editions/{annee} {
       allow read: if true;
-      allow create, update: if estMembre();
+      allow create, update: if annee.matches('^20[0-9][0-9]$|^2100$')
+        && request.resource.data.size() < 30;
       allow delete: if false;
     }
 
     match /joueurs/{id} {
       allow read: if true;
-      allow create, update: if estMembre();
+      allow create, update: if id.size() <= 30
+        && request.resource.data.size() < 10;
       allow delete: if false;
     }
 
-    match /membres/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null
-        && request.auth.uid == uid
-        && request.resource.data.code == get(/databases/$(database)/documents/config/acces).data.code;
-      allow update, delete: if false;
-    }
-
-    match /config/{doc} {
+    match /{autre=**} {
       allow read, write: if false;
     }
   }
