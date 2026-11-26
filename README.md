@@ -14,8 +14,11 @@ Site du palmarès et de la saisie en direct des joutes sportives de la PAM.
 | `pam.jpg` | Photo de l'équipe (en-tête du palmarès et icône) |
 | `firebase-config.js` | Les 6 valeurs de ton projet Firebase, **à remplir** |
 | `firestore.rules` | Règles de sécurité de la base, à copier dans Firebase |
-| `import.html` | Page à utiliser **une seule fois** pour charger l'historique 2012-2025 |
-| `data/historique.json` | L'historique tiré des fichiers Excel |
+| `data/historique.json` | L'historique 2012-2025 tiré des fichiers Excel |
+| `integrer-historique.ps1` | Recopie `data/historique.json` dans `index.html` (à relancer seulement si tu modifies l'historique) |
+| `import.html` | Facultatif : copie l'historique dans Firebase (inutile pour l'affichage) |
+
+**L'historique est intégré directement dans `index.html`** : il s'affiche toujours, même avant d'avoir configuré Firebase. Firebase ne sert qu'à enregistrer les nouvelles éditions (et les éventuelles corrections), qui viennent s'ajouter par-dessus.
 | `netlify.toml` | Réglages Netlify (rien à modifier) |
 
 ---
@@ -63,13 +66,18 @@ Pour ajouter un joueur plus tard : reviens sur ce document et ajoute son adresse
 
 Firebase > **Authentication > Paramètres > Domaines autorisés** > **Ajouter un domaine** : saisis `pam-joutes.netlify.app` (ton adresse Netlify, sans `https://`).
 
-### Étape 7 · Importer l'historique (une seule fois)
+### Étape 7 · Vérifier
 
-1. Ouvre `https://pam-joutes.netlify.app/import.html`.
-2. Connecte-toi avec une adresse présente dans `config/acces`.
-3. Clique sur **Importer l'historique**. Le message « 6 joueurs et 12 éditions importés » confirme l'opération.
+Ouvre `https://pam-joutes.netlify.app` : le palmarès et l'historique 2012-2025 s'affichent tout de suite. Connecte-toi (bouton en haut à droite), va dans **Jour J** et crée l'édition de l'année pour vérifier que l'enregistrement fonctionne.
 
-C'est prêt : ouvre `https://pam-joutes.netlify.app` et partage le lien avec les copains.
+C'est prêt : partage le lien avec les copains.
+
+> Pas besoin d'importer l'historique : il est déjà dans la page. La page `import.html` reste disponible si un jour tu veux aussi en avoir une copie dans Firebase.
+
+## Corriger l'historique
+
+- **Depuis le site** : onglet Éditions > année > **Modifier / saisir**. La correction est enregistrée dans Firebase et remplace l'ancienne valeur à l'affichage.
+- **Dans le fichier** : modifie `data/historique.json`, lance `integrer-historique.ps1` (clic droit > Exécuter avec PowerShell), puis renvoie `index.html` et `data/historique.json` sur GitHub.
 
 ---
 
@@ -92,7 +100,8 @@ Les données sont dans Firestore. Pour en garder une copie, Firebase propose un 
 
 | Message | Solution |
 |---|---|
-| « Firebase n'est pas encore configuré » | `firebase-config.js` contient encore `A_REMPLACER` (étape 2) |
+| « La saisie en ligne sera active une fois firebase-config.js renseigné » | `firebase-config.js` contient encore `A_REMPLACER` (étape 2) |
+| L'historique n'apparaît pas | `index.html` n'est pas la dernière version : renvoie-le sur GitHub |
 | La fenêtre Google s'ouvre puis se ferme avec une erreur de domaine | Ajoute l'adresse Netlify aux domaines autorisés (étape 6) |
 | « Ton adresse n'est pas autorisée » | Ajoute l'adresse dans `config/acces > emails` (étape 3) |
-| Le site reste vide après import | Vérifie que les règles de l'étape 3 ont bien été publiées |
+| « Impossible de lire les éditions en ligne » | Vérifie que les règles de l'étape 3 ont bien été publiées |
