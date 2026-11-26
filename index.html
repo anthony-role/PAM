@@ -485,7 +485,7 @@ function fmtDate(d) { if (!d) return ""; const t = new Date(d + "T12:00:00"); re
 function statusLabel(s) { return { terminee: "Terminée", en_cours: "En cours", prevue: "En préparation", a_completer: "Résultats à retrouver" }[s] || ""; }
 function editionDetail(ed) {
   const meta = [fmtDate(ed.date), ed.lieu ? esc(ed.lieu) : "", statusLabel(ed.status)].filter(Boolean).join(" · ");
-  const edit = S.canWrite !== false && !S.readOnly ? `<a class="btn small" href="#jour-j" data-act="goto-jour" data-year="${ed.year}">Modifier / saisir</a>` : "";
+  const edit = S.db ? `<a class="btn small" href="#jour-j" data-act="goto-jour" data-year="${ed.year}">${S.member ? "Modifier / saisir" : "Saisir (code PAM)"}</a>` : "";
   if (!hasResults(ed)) {
     return `<div class="card"><div class="evhead"><h2>Édition ${ed.year}</h2>${edit}</div><p class="muted">${meta}</p>
       <p>${ed.notes ? esc(ed.notes) : "Aucun résultat saisi pour l'instant."}</p>
@@ -632,12 +632,12 @@ function currentJourEdition() {
 }
 function viewJourJ() {
   const ed = currentJourEdition();
-  const ro = S.canWrite === false || S.readOnly;
+  const ro = !S.member || S.readOnly;
   const eds = yearsSorted().slice().reverse();
   const nextYear = Math.max(new Date().getFullYear(), ...eds.map(e => e.year + 1));
   const picker = `<div class="card" style="display:grid;gap:12px">
     <h2>Jour J</h2>
-    ${ro ? (S.user ? `<div class="notice">Ton adresse (${esc(S.user.email || "")}) n'est pas dans la liste des joueurs autorisés à saisir. Demande à l'organisateur de l'ajouter.</div>` : `<div class="notice row" style="justify-content:space-between">Connecte-toi avec ton compte Google pour saisir les scores. <button class="btn primary small" data-act="login">Se connecter</button></div>`) : ""}
+    ${ro ? codeForm() : ""}
     <div class="row">
       <label class="field"><span>Édition à saisir</span>
         <select id="jour-pick">${eds.map(e => `<option value="${e.year}" ${ed && e.year === ed.year ? "selected" : ""}>${e.year} — ${statusLabel(e.status)}</option>`).join("")}${ed ? "" : `<option value="" selected>Choisir…</option>`}</select></label>
@@ -739,7 +739,7 @@ function save(year, patch) {
 }
 function onWriteError(err) {
   const code = err && err.code;
-  if (code === "permission-denied") { S.readOnly = true; setStatus(S.user ? "Ton adresse n'est pas autorisée à saisir : la page passe en lecture seule." : "Connecte-toi pour saisir les scores.", true); render(); return; }
+  if (code === "permission-denied") { S.member = false; setStatus("Saisie refusée : entre à nouveau le code PAM dans l'onglet Jour J.", true); renderAuth(); render(); return; }
   if (code === "resource-exhausted") { setStatus("Le quota gratuit de la base de données est atteint pour aujourd'hui.", true); return; }
   setStatus("L'enregistrement a échoué. Vérifiez la connexion puis recommencez.", true);
 }
@@ -877,23 +877,57 @@ window.addEventListener("hashchange", route);
 // ---------- Données ----------
 let rerenderTimer = null;
 function scheduleRender() { clearTimeout(rerenderTimer); rerenderTimer = setTimeout(render, 30); }
+// ---------- Accès à la saisie : un code PAM partagé entre les copains ----------
+// Chaque téléphone reçoit une identité anonyme Firebase. En tapant le bon code une fois,
+// il devient « membre » (document membres/<id>) et peut saisir. Les règles Firestore vérifient le code.
 const $auth = document.getElementById("authbox");
 function renderAuth() {
-  if (!S.auth) { $auth.innerHTML = ""; return; }
-  if (S.user) $auth.innerHTML = `<span class="who" title="${esc(S.user.email || "")}">${esc(S.user.displayName || S.user.email || "")}</span><button data-act="logout">Déconnexion</button>`;
-  else $auth.innerHTML = `<button class="go" data-act="login">Se connecter</button>`;
+  if (!S.db) { $auth.innerHTML = ""; return; }
+  if (S.member) $auth.innerHTML = `<span class="who">Saisie activée${S.memberName ? " · " + esc(S.memberName) : ""}</span><button data-act="logout">Quitter</button>`;
+  else $auth.innerHTML = `<a class="go" href="#jour-j" data-act="ask-code" style="text-decoration:none;background:var(--accent);color:var(--accent-ink);border-radius:6px;padding:4px 10px;font-weight:600">Saisir les scores</a>`;
 }
-async function login() {
-  try { await S.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-  catch (e) {
-    if (e && (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment")) { S.auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); return; }
-    if (e && e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") setStatus("La connexion a échoué : " + (e.message || e.code), true);
+function codeForm() {
+  if (!S.db) return `<div class="notice">La saisie en ligne n'est pas encore active : le fichier firebase-config.js n'est pas renseigné (voir README). L'historique reste consultable.</div>`;
+  return `<form class="notice" id="code-form" style="display:grid;gap:10px">
+    <b>Pour saisir les résultats, entre le code PAM</b>
+    <span class="small muted">Une seule fois par téléphone. Demande le code à l'organisateur.</span>
+    <div class="row">
+      <input type="text" id="code-nom" placeholder="Ton prénom (facultatif)" autocomplete="nickname" style="width:170px">
+      <input type="password" id="code-pam" placeholder="Code PAM" autocomplete="current-password" required style="width:150px">
+      <button class="btn primary" type="submit">Valider</button>
+    </div>
+  </form>`;
+}
+async function checkMember(u) {
+  if (!u) { S.member = false; return; }
+  try { const d = await S.db.doc("membres/" + u.uid).get(); S.member = d.exists; S.memberName = d.exists ? (d.data().nom || "") : ""; }
+  catch (_) { S.member = false; }
+}
+async function joinWithCode(code, nom) {
+  try {
+    const cred = S.auth.currentUser ? { user: S.auth.currentUser } : await S.auth.signInAnonymously();
+    await S.db.doc("membres/" + cred.user.uid).set({ code, nom: nom || "", depuis: new Date().toISOString() });
+    S.member = true; S.memberName = nom || ""; S.readOnly = false;
+    setStatus("Saisie activée sur ce téléphone. Bon jeu !");
+  } catch (e) {
+    S.member = false;
+    if (e && e.code === "permission-denied") setStatus("Code incorrect. Vérifie-le auprès de l'organisateur.", true);
+    else if (e && e.code === "auth/operation-not-allowed") setStatus("La connexion anonyme n'est pas activée dans Firebase (README, étape 1).", true);
+    else setStatus("Impossible d'activer la saisie : " + ((e && (e.message || e.code)) || "erreur inconnue"), true);
   }
+  renderAuth(); render();
 }
-document.addEventListener("click", e => {
-  const b = e.target.closest("[data-act=login],[data-act=logout]"); if (!b || !S.auth) return;
+document.addEventListener("submit", e => {
+  if (e.target.id !== "code-form") return;
   e.preventDefault();
-  if (b.dataset.act === "login") login(); else S.auth.signOut();
+  const code = document.getElementById("code-pam").value.trim();
+  const nom = document.getElementById("code-nom").value.trim().slice(0, 40);
+  if (code) joinWithCode(code, nom);
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act=logout]"); if (!b || !S.auth) return;
+  e.preventDefault();
+  S.auth.signOut();
 });
 
 // Historique intégré à la page (2012-2025) : toujours affiché, même sans Firebase.
@@ -923,8 +957,9 @@ async function start() {
   const fs = firebase.firestore();
   S.auth = firebase.auth();
   S.canWrite = false;
-  S.auth.onAuthStateChanged(u => { S.user = u; S.canWrite = u ? null : false; S.readOnly = false; renderAuth(); render(); });
   S.db = { doc: p => fs.doc(p), collection: p => fs.collection(p) };
+  renderAuth();
+  S.auth.onAuthStateChanged(async u => { S.user = u; await checkMember(u); S.readOnly = false; renderAuth(); render(); });
   const db = S.db;
   let gotEditions = false;
   const timer = setTimeout(() => { if (!gotEditions) setStatus("Les nouvelles éditions tardent à arriver : l'historique est affiché, vérifie ta connexion.", true); }, 10000);

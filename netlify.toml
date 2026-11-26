@@ -1,4 +1,4 @@
-# Site statique : aucune étape de construction, on publie le dossier tel quel.
+﻿# Site statique : aucune étape de construction, on publie le dossier tel quel.
 [build]
   publish = "."
 
@@ -7,8 +7,3 @@
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-
-[[headers]]
-  for = "/import.html"
-  [headers.values]
-    X-Robots-Tag = "noindex"

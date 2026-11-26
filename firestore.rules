@@ -2,28 +2,36 @@ rules_version = '2';
 
 // Règles de sécurité de la base PAM.
 // - Tout le monde peut consulter les résultats.
-// - Seules les adresses Google listées dans le document config/acces (champ "emails")
-//   peuvent créer ou modifier des éditions et des joueurs.
-// - Le document config/acces ne se modifie que depuis la console Firebase.
+// - Pour saisir, un téléphone doit d'abord donner le « code PAM » une fois :
+//   il crée alors son document membres/<son id>, accepté seulement si le code est le bon.
+// - Le code est rangé dans config/acces (champ "code"), lisible par personne : on le change dans la console Firebase.
+// - Personne ne peut supprimer une édition depuis le site.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function estJoueur() {
+    function estMembre() {
       return request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email in get(/databases/$(database)/documents/config/acces).data.emails;
+        && exists(/databases/$(database)/documents/membres/$(request.auth.uid));
     }
 
     match /editions/{annee} {
       allow read: if true;
-      allow create, update: if estJoueur();
+      allow create, update: if estMembre();
       allow delete: if false;
     }
 
     match /joueurs/{id} {
       allow read: if true;
-      allow create, update: if estJoueur();
+      allow create, update: if estMembre();
       allow delete: if false;
+    }
+
+    match /membres/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.code == get(/databases/$(database)/documents/config/acces).data.code;
+      allow update, delete: if false;
     }
 
     match /config/{doc} {
